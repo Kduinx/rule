@@ -41,9 +41,6 @@ stun.*.*.*
 api-jooxtt.sanook.com
 api.joox.com
 joox.com
-#Win10 本地连接检测
-+.msftconnecttest.com
-+.msftncsi.com
 #Nintendo Switch
 +.srv.nintendo.net
 +.cdn.nintendo.net
