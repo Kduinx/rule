@@ -39,8 +39,6 @@
     {
       "domain_suffix": [
         ".pool.ntp.org",
-        ".msftconnecttest.com",
-        ".msftncsi.com",
         ".srv.nintendo.net",
         ".cdn.nintendo.net",
         ".stun.playstation.net",
