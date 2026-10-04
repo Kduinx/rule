@@ -1,0 +1,183 @@
+# https://wiki.metacubex.one/config/general
+
+tcp-concurrent: true
+
+tun:
+  route-exclude-address-set:
+    - cn_ip
+    - 23.200.230.0/24
+
+sniffer:
+  enable: true
+  force-dns-mapping: true
+  parse-pure-ip: true
+  override-destination: true
+  sniff:
+    HTTP:
+      ports: [80, 8080-8090]
+      override-destination: true
+    TLS:
+      ports: [443, 8443]
+    QUIC:
+      ports: [443, 8443]
+
+dns:
+  enable: true
+  cache-algorithm: arc
+  ipv6: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.0/16
+  fake-ip-filter:
+    - "+.msftconnecttest.com"
+    - "+.msftncsi.com"
+    - rule-set:fakeipfilter_cn
+    - rule-set:fakeipfilter_!cn
+    - rule-set:private_domain
+    - rule-set:cn_domain
+  default-nameserver:
+    - https://223.5.5.5/dns-query
+  # proxy-server-nameserver:
+  #   - https://dns.alidns.com/dns-query
+  #   - https://doh.pub/dns-query
+  direct-nameserver:
+    - system
+  direct-nameserver-follow-policy: false
+  nameserver-policy:
+    "+.msftconnecttest.com":
+      - system
+    "+.msftncsi.com":
+      - system
+    "rule-set:cn_domain,private_domain,fakeipfilter_cn,steamcn_domain,microsoftcn_domain,applecn_domain":
+      - https://dns.alidns.com/dns-query#disable-qtype-65=true
+      - https://doh.pub/dns-query#disable-qtype-65=true
+    "rule-set:cloudflare_domain":
+      - https://1.1.1.1/dns-query#默认代理&disable-qtype-65=true
+    "rule-set:fakeipfilter_!cn":
+      - https://8.8.8.8/dns-query#默认代理&disable-qtype-65=true
+  nameserver:
+    - https://8.8.8.8/dns-query#默认代理&ecs=223.5.5.0/24
+  fallback:
+    - https://8.8.8.8/dns-query#默认代理
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+
+anchors:
+  ip: &ip
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 86400
+  domain: &domain
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+  domain_text: &domain_text
+    type: http
+    behavior: domain
+    format: text
+    interval: 86400
+
+rule-providers:
+  fakeipfilter_cn:
+    <<: *domain_text
+    url: https://raw.githubusercontent.com/Kduinx/rule/main/rules/fakeipfilter-cn.list
+  fakeipfilter_!cn: 
+    <<: *domain_text
+    url: https://raw.githubusercontent.com/Kduinx/rule/main/rules/fakeipfilter-!cn.list
+  private_ip:
+    <<: *ip
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/private.mrs
+  private_domain:
+    <<: *domain
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.mrs
+  cn_ip:
+    <<: *ip
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/cn.mrs
+  cn_domain:
+    <<: *domain
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs
+  geolocation-!cn_domain:
+    <<: *domain
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/geolocation-!cn.mrs
+  steamcn_domain:
+    <<: *domain
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/steam@cn.mrs
+  steam_domain:
+    <<: *domain
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/steam.mrs
+  youtube_domain:
+    <<: *domain
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/youtube.mrs
+  category-ai-!cn_domain:
+    <<: *domain
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ai-!cn.mrs
+  google_domain:
+    <<: *domain
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.mrs
+  google_ip:
+    <<: *ip
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/google.mrs
+  tiktok_domain:
+    <<: *domain
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tiktok.mrs
+  microsoft_domain:
+    <<: *domain
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft.mrs
+  microsoftcn_domain:
+    <<: *domain
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft@cn.mrs
+  github_domain:
+    <<: *domain
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github.mrs
+  apple_domain:
+    <<: *domain
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple.mrs
+  applecn_domain:
+    <<: *domain
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple@cn.mrs
+  apple_ip:
+    <<: *ip
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo-lite/geoip/apple.mrs
+  telegram_domain:
+    <<: *domain
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.mrs
+  telegram_ip:
+    <<: *ip
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/telegram.mrs
+  cloudflare_domain:
+    <<: *domain
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cloudflare.mrs
+  vscode_domain:
+    <<: *domain_text
+    url: https://raw.githubusercontent.com/Kduinx/rule/main/rules/vscode.list   
+  direct_domain:
+    <<: *domain_text
+    url: https://raw.githubusercontent.com/Kduinx/rule/main/rules/direct.list
+
+rules:
+  - AND,((RULE-SET,geolocation-!cn_domain),(DST-PORT,443),(NETWORK,UDP)),REJECT
+  - RULE-SET,private_ip,DIRECT,no-resolve
+  - RULE-SET,private_domain,DIRECT
+  - RULE-SET,direct_domain,DIRECT
+  - RULE-SET,category-ai-!cn_domain,AI
+  - RULE-SET,cloudflare_domain,手动选择
+  - RULE-SET,youtube_domain,Youtube
+  - RULE-SET,google_domain,手动选择
+  - RULE-SET,github_domain,手动选择
+  - RULE-SET,vscode_domain,DIRECT
+  - RULE-SET,microsoftcn_domain,DIRECT
+  - RULE-SET,microsoft_domain,手动选择
+  - RULE-SET,applecn_domain,DIRECT
+  - RULE-SET,apple_domain,手动选择
+  - RULE-SET,telegram_domain,手动选择
+  - RULE-SET,tiktok_domain,手动选择
+  - RULE-SET,steamcn_domain,DIRECT
+  - RULE-SET,steam_domain,Steam
+  - RULE-SET,geolocation-!cn_domain, 手动选择
+  - RULE-SET,google_ip,手动选择
+  - RULE-SET,apple_ip,手动选择
+  - RULE-SET,telegram_ip,手动选择
+  - RULE-SET,cn_ip,DIRECT
+  - MATCH,手动选择
