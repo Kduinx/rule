@@ -1,120 +1,335 @@
-const daly_check_url = "http://www.google.com/generate_204";
-const daly_check_interval = 240;
-const daly_check_tolerance = 100;
+const daily_check_url = "http://www.google.com/generate_204";
+const daily_check_interval = 240;
+const daily_check_tolerance = 100;
+
+// 选择组名称
+const SELECT_GROUP_NAMES = ["手动选择", "Steam", "Youtube", "AI"];
+
+// 需要额外追加的选项
+const SELECT_GROUP_EXTRA_PROXIES = {
+  Steam: ["DIRECT"],
+};
 
 const groupBaseOption = {
   timeout: 3000,
-  url: daly_check_url,
+  url: daily_check_url,
   lazy: true,
 };
 
 const urlTestOption = {
-    hidden: true,
-    type: "url-test",
-    interval: daly_check_interval,
-    tolerance: daly_check_tolerance,
-}
+  hidden: true,
+  type: "url-test",
+  interval: daily_check_interval,
+  tolerance: daily_check_tolerance,
+};
 
 const selectOption = {
   hidden: false,
   type: "select",
-}
+};
 
-const selectOption_proxies = [
-  "新加坡",
-  "日本",    
-  "美国",
-  "香港",
-]
+// ===== Merge.yaml 覆写内容 =====
 
-const proxyGroups = [
-  {
-    ...groupBaseOption,
-    ...selectOption,
-    name: "手动选择",
-    proxies: selectOption_proxies
+// rule-providers 的公共模板（对应 YAML anchors）
+const RULE_PROVIDER_TEMPLATES = {
+  ip: {
+    type: "http",
+    behavior: "ipcidr",
+    format: "mrs",
+    interval: 86400,
   },
-  {
-    ...groupBaseOption,
-    ...selectOption,
-    name: "Steam",
-    proxies: selectOption_proxies
+  domain: {
+    type: "http",
+    behavior: "domain",
+    format: "mrs",
+    interval: 86400,
   },
-  {
-    ...groupBaseOption,
-    ...selectOption,
-    name: "Youtube",
-    proxies: selectOption_proxies
+  domain_text: {
+    type: "http",
+    behavior: "domain",
+    format: "text",
+    interval: 86400,
   },
-  {
-    ...groupBaseOption,
-    ...selectOption,
-    name: "AI",
-    proxies: selectOption_proxies
+};
+
+const RULE_PROVIDERS = {
+  fakeipfilter_cn: {
+    ...RULE_PROVIDER_TEMPLATES.domain_text,
+    url: "https://raw.githubusercontent.com/Kduinx/rule/main/rules/fakeipfilter-cn.list",
   },
-  {
-    ...groupBaseOption,
-    ...urlTestOption,
-    name: "新加坡",
-    proxies: []
+  "fakeipfilter_!cn": {
+    ...RULE_PROVIDER_TEMPLATES.domain_text,
+    url: "https://raw.githubusercontent.com/Kduinx/rule/main/rules/fakeipfilter-!cn.list",
   },
-  {
-    ...groupBaseOption,
-    ...urlTestOption,
-    name: "日本",
-    proxies: []
+  private_ip: {
+    ...RULE_PROVIDER_TEMPLATES.ip,
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/private.mrs",
   },
-  {
-    ...groupBaseOption,
-    ...urlTestOption,
-    name: "美国",
-    type: "url-test",
-    proxies: []
+  private_domain: {
+    ...RULE_PROVIDER_TEMPLATES.domain,
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.mrs",
   },
-  {
-    ...groupBaseOption,
-    ...urlTestOption,
-    name: "香港",
-    proxies: []
-  }
+  cn_ip: {
+    ...RULE_PROVIDER_TEMPLATES.ip,
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/cn.mrs",
+  },
+  cn_domain: {
+    ...RULE_PROVIDER_TEMPLATES.domain,
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs",
+  },
+  "geolocation-!cn_domain": {
+    ...RULE_PROVIDER_TEMPLATES.domain,
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/geolocation-!cn.mrs",
+  },
+  steamcn_domain: {
+    ...RULE_PROVIDER_TEMPLATES.domain,
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/steam@cn.mrs",
+  },
+  steam_domain: {
+    ...RULE_PROVIDER_TEMPLATES.domain,
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/steam.mrs",
+  },
+  youtube_domain: {
+    ...RULE_PROVIDER_TEMPLATES.domain,
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/youtube.mrs",
+  },
+  "category-ai-!cn_domain": {
+    ...RULE_PROVIDER_TEMPLATES.domain,
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ai-!cn.mrs",
+  },
+  google_domain: {
+    ...RULE_PROVIDER_TEMPLATES.domain,
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.mrs",
+  },
+  google_ip: {
+    ...RULE_PROVIDER_TEMPLATES.ip,
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/google.mrs",
+  },
+  tiktok_domain: {
+    ...RULE_PROVIDER_TEMPLATES.domain,
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tiktok.mrs",
+  },
+  microsoft_domain: {
+    ...RULE_PROVIDER_TEMPLATES.domain,
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft.mrs",
+  },
+  microsoftcn_domain: {
+    ...RULE_PROVIDER_TEMPLATES.domain,
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft@cn.mrs",
+  },
+  github_domain: {
+    ...RULE_PROVIDER_TEMPLATES.domain,
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github.mrs",
+  },
+  apple_domain: {
+    ...RULE_PROVIDER_TEMPLATES.domain,
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple.mrs",
+  },
+  applecn_domain: {
+    ...RULE_PROVIDER_TEMPLATES.domain,
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple@cn.mrs",
+  },
+  apple_ip: {
+    ...RULE_PROVIDER_TEMPLATES.ip,
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo-lite/geoip/apple.mrs",
+  },
+  telegram_domain: {
+    ...RULE_PROVIDER_TEMPLATES.domain,
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.mrs",
+  },
+  telegram_ip: {
+    ...RULE_PROVIDER_TEMPLATES.ip,
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/telegram.mrs",
+  },
+  cloudflare_domain: {
+    ...RULE_PROVIDER_TEMPLATES.domain,
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cloudflare.mrs",
+  },
+  vscode_domain: {
+    ...RULE_PROVIDER_TEMPLATES.domain_text,
+    url: "https://raw.githubusercontent.com/Kduinx/rule/main/rules/vscode.list",
+  },
+  direct_domain: {
+    ...RULE_PROVIDER_TEMPLATES.domain_text,
+    url: "https://raw.githubusercontent.com/Kduinx/rule/main/rules/direct.list",
+  },
+  xiaomi_domain: {
+    ...RULE_PROVIDER_TEMPLATES.domain,
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/xiaomi.mrs",
+  },
+};
+
+const RULES = [
+  "AND,((RULE-SET,geolocation-!cn_domain),(DST-PORT,443),(NETWORK,UDP)),REJECT",
+  "RULE-SET,private_ip,DIRECT,no-resolve",
+  "RULE-SET,private_domain,DIRECT",
+  "RULE-SET,direct_domain,DIRECT",
+  "RULE-SET,category-ai-!cn_domain,AI",
+  "RULE-SET,cloudflare_domain,手动选择",
+  "RULE-SET,youtube_domain,Youtube",
+  "RULE-SET,google_domain,手动选择",
+  "RULE-SET,github_domain,手动选择",
+  "RULE-SET,xiaomi_domain,DIRECT",
+  "RULE-SET,vscode_domain,DIRECT",
+  "RULE-SET,microsoftcn_domain,DIRECT",
+  "RULE-SET,microsoft_domain,手动选择",
+  "RULE-SET,applecn_domain,DIRECT",
+  "RULE-SET,apple_domain,手动选择",
+  "RULE-SET,telegram_domain,手动选择",
+  "RULE-SET,tiktok_domain,手动选择",
+  "RULE-SET,steamcn_domain,DIRECT",
+  "RULE-SET,steam_domain,Steam",
+  "RULE-SET,geolocation-!cn_domain, 手动选择",
+  "RULE-SET,google_ip,手动选择",
+  "RULE-SET,apple_ip,手动选择",
+  "RULE-SET,telegram_ip,手动选择",
+  "RULE-SET,cn_ip,DIRECT",
+  "MATCH,手动选择",
 ];
 
-function getProxies(proxies) {
-  const flagMap = {
-    '🇸🇬': '新加坡',
-    '🇯🇵': '日本',
-    '🇺🇸': '美国',
-    '🇭🇰': '香港'
-  };
-  return proxies.reduce((acc, proxy) => {
-    const flag = proxy.name.trim().slice(0, 4);
+const OVERRIDE = {
+  "tcp-concurrent": true,
+  tun: {
+    "route-exclude-address-set": ["cn_ip", "23.200.230.0/24"],
+  },
+  sniffer: {
+    enable: true,
+    "force-dns-mapping": true,
+    "parse-pure-ip": true,
+    "override-destination": true,
+    sniff: {
+      HTTP: {
+        ports: [80, "8080-8090"],
+        "override-destination": true,
+      },
+      TLS: {
+        ports: [443, 8443],
+      },
+      QUIC: {
+        ports: [443, 8443],
+      },
+    },
+  },
+  dns: {
+    enable: true,
+    "cache-algorithm": "arc",
+    ipv6: false,
+    "enhanced-mode": "fake-ip",
+    "fake-ip-range": "198.18.0.0/16",
+    "fake-ip-filter": [
+      "+.msftconnecttest.com",
+      "+.msftncsi.com",
+      "rule-set:fakeipfilter_cn",
+      "rule-set:fakeipfilter_!cn",
+      "rule-set:private_domain",
+      "rule-set:cn_domain",
+    ],
+    "default-nameserver": ["https://223.5.5.5/dns-query"],
+    "direct-nameserver": ["system"],
+    "direct-nameserver-follow-policy": false,
+    "nameserver-policy": {
+      "+.msftconnecttest.com": ["system"],
+      "+.msftncsi.com": ["system"],
+      "rule-set:cn_domain,private_domain,fakeipfilter_cn,steamcn_domain,microsoftcn_domain,applecn_domain":
+        [
+          "https://dns.alidns.com/dns-query#disable-qtype-65=true",
+          "https://doh.pub/dns-query#disable-qtype-65=true",
+        ],
+      "rule-set:cloudflare_domain": [
+        "https://1.1.1.1/dns-query#默认代理&disable-qtype-65=true",
+      ],
+      "rule-set:fakeipfilter_!cn": [
+        "https://8.8.8.8/dns-query#默认代理&disable-qtype-65=true",
+      ],
+    },
+    nameserver: ["https://8.8.8.8/dns-query#默认代理&ecs=223.5.5.0/24"],
+    fallback: ["https://8.8.8.8/dns-query#默认代理"],
+    "fallback-filter": {
+      geoip: true,
+      "geoip-code": "CN",
+    },
+  },
+  "rule-providers": RULE_PROVIDERS,
+  rules: RULES,
+};
 
-    if (!flagMap.hasOwnProperty(flag)) {
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+// 深度合并：普通对象递归合并，数组与基础类型直接覆盖
+function mergeConfig(base, override) {
+  if (!isPlainObject(base) || !isPlainObject(override)) {
+    return override;
+  }
+
+  const result = { ...base };
+  Object.keys(override).forEach((key) => {
+    result[key] = mergeConfig(base[key], override[key]);
+  });
+  return result;
+}
+
+function isRegionalIndicator(codePoint) {
+  return codePoint >= 0x1f1e6 && codePoint <= 0x1f1ff;
+}
+
+function getFlag(name) {
+  const chars = Array.from(String(name).trim());
+  if (chars.length < 2) {
+    return null;
+  }
+
+  const first = chars[0].codePointAt(0);
+  const second = chars[1].codePointAt(0);
+  if (!isRegionalIndicator(first) || !isRegionalIndicator(second)) {
+    return null;
+  }
+
+  return chars[0] + chars[1];
+}
+
+function getProxies(proxies) {
+  if (!Array.isArray(proxies)) {
+    return {};
+  }
+
+  return proxies.reduce((acc, proxy) => {
+    const flag = getFlag(proxy.name);
+    if (!flag) {
       return acc;
     }
 
-    let key = flagMap[flag];
-
-    if (!acc[key]) {
-      acc[key] = [];
+    if (!acc[flag]) {
+      acc[flag] = [];
     }
-    acc[key].push(proxy.name);
+    acc[flag].push(proxy.name);
     return acc;
   }, {});
 }
 
 function main(config) {
-  const proxies = getProxies(config.proxies);
+  // 先应用 Merge.yaml 的覆写内容
+  const merged = mergeConfig(config, OVERRIDE);
 
-  config["proxy-groups"] = [];
-  const newProxyGroups = proxyGroups.map((group) => {
-    const newGroup = { ...group };
-    if (proxies[group.name]) {
-      newGroup.proxies = proxies[group.name];
-    }
-    return newGroup;
-  });
+  const grouped = getProxies(merged.proxies);
 
-  config["proxy-groups"].push(...newProxyGroups);
-  return config;
+  const regionFlags = Object.keys(grouped);
+
+  const selectGroups = SELECT_GROUP_NAMES.map((name) => ({
+    ...groupBaseOption,
+    ...selectOption,
+    name,
+    proxies: regionFlags.concat(SELECT_GROUP_EXTRA_PROXIES[name] || []),
+  }));
+
+  const regionGroups = regionFlags.map((flag) => ({
+    ...groupBaseOption,
+    ...urlTestOption,
+    name: flag,
+    proxies: grouped[flag],
+  }));
+
+  merged["proxy-groups"] = selectGroups.concat(regionGroups);
+  return merged;
 }
