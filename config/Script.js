@@ -1,7 +1,7 @@
 const regionFilters = {
 	美国节点: { icon: '🇺🇸', filter: '美国' },
 	日本节点: { icon: '🇯🇵', filter: '日本' },
-	狮城节点: { icon: '🇸🇬', filter: '新加坡|狮城' },
+	新加坡节点: { icon: '🇸🇬', filter: '新加坡|狮城' },
 	香港节点: { icon: '🇭🇰', filter: '香港' },
 };
 
