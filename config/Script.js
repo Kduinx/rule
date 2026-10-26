@@ -63,7 +63,6 @@ function main(config) {
 		proxyGroups.push({
 			name: regionName,
 			icon: cfg.icon,
-      hidden: true,
 			type: 'url-test',
 			proxies: data.items.map((p) => p.name),
 			url: 'http://www.gstatic.com/generate_204',
