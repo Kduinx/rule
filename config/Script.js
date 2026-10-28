@@ -239,6 +239,7 @@ function main(config) {
     'store-selected': true,
     'store-filters': true,
   };
+  const proxyServerNameserver = config?.dns?.["proxy-server-nameserver"];
   config['dns'] = {
     'enable': true,
     'cache-algorithm': 'arc',
@@ -253,6 +254,7 @@ function main(config) {
       'rule-set:private_domain',
       'rule-set:cn_domain',
     ],
+	'proxy-server-nameserver': proxyServerNameserver,
     'default-nameserver': ['https://223.5.5.5/dns-query'],
     'direct-nameserver': ['system'],
     'direct-nameserver-follow-policy': false,
